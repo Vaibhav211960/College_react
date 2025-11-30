@@ -4,15 +4,27 @@ import { useRoute, Link } from "wouter";
 import { CATEGORIES, PRODUCTS } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { useApp } from "@/lib/store";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CategoryPage() {
   const [match, params] = useRoute("/category/:category");
+  const { addToCart } = useApp();
+  const { toast } = useToast();
   
   if (!match) return null;
   
   const categoryId = params.category;
   const category = CATEGORIES.find(c => c.id === categoryId);
   const products = PRODUCTS.filter(p => p.category === categoryId);
+
+  const handleAddToCart = (product: any) => {
+    addToCart(product);
+    toast({
+      title: "Added to cart",
+      description: `${product.title} has been added to your cart.`,
+    });
+  };
 
   if (!category) {
     return (
@@ -36,7 +48,7 @@ export default function CategoryPage() {
       <Navbar />
       
       <div className="bg-secondary/30 py-12">
-        <div className="container">
+        <div className="container px-6 md:px-8 lg:px-12">
           <Link href="/">
             <Button variant="ghost" className="mb-6 pl-0 hover:pl-0 hover:bg-transparent text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Categories
@@ -47,7 +59,7 @@ export default function CategoryPage() {
         </div>
       </div>
 
-      <div className="container py-12 flex-1">
+      <div className="container px-6 md:px-8 lg:px-12 py-12 flex-1">
         {/* Subcategories Filter Mock */}
         <div className="flex flex-wrap gap-2 mb-12">
           <Button variant="default" size="sm" className="rounded-full">All</Button>
@@ -69,8 +81,11 @@ export default function CategoryPage() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button className="w-full bg-white text-black hover:bg-white/90">
-                      View Details
+                    <Button 
+                      className="w-full bg-white text-black hover:bg-white/90"
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      Add to Cart
                     </Button>
                   </div>
                 </div>
@@ -80,7 +95,7 @@ export default function CategoryPage() {
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{product.description}</p>
                   <div className="flex items-center justify-between mt-auto">
                     <span className="font-medium text-lg">${product.price.toFixed(2)} <span className="text-sm text-muted-foreground font-normal">/ sq.ft</span></span>
-                    <Button size="icon" variant="ghost">
+                    <Button size="icon" variant="ghost" onClick={() => handleAddToCart(product)}>
                       <ShoppingCart className="h-5 w-5" />
                     </Button>
                   </div>

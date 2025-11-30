@@ -44,6 +44,8 @@
   --font-sans: 'Inter', sans-serif;
   --font-serif: 'Playfair Display', serif;
   --radius: 0.5rem;
+  
+  --container-padding: 2rem;
 }
 
 /* LIGHT MODE - Elegant Natural Tones */
@@ -118,5 +120,11 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif font-medium tracking-tight;
+  }
+}
+
+@layer utilities {
+  .container {
+    @apply mx-auto px-6 md:px-12 max-w-7xl;
   }
 }

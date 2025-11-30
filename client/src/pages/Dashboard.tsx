@@ -1,26 +1,50 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, Clock, User } from "lucide-react";
+import { Package, Clock, User, ShoppingBag, Plus } from "lucide-react";
+import { useApp } from "@/lib/store";
+import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
 
 export default function Dashboard() {
+  const { user } = useApp();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!user) {
+      setLocation("/login");
+    }
+  }, [user, setLocation]);
+
+  if (!user) return null;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
-      <div className="container py-12 flex-1">
-        <h1 className="font-serif text-3xl font-bold mb-8">My Dashboard</h1>
+      <div className="container px-6 md:px-8 lg:px-12 py-12 flex-1">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="font-serif text-3xl font-bold">My Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, {user.name}</p>
+          </div>
+          <Link href="/#categories">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" /> New Order
+            </Button>
+          </Link>
+        </div>
         
         <Tabs defaultValue="orders" className="w-full">
           <TabsList className="grid w-full md:w-[400px] grid-cols-3 mb-8">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="orders">Active Orders</TabsTrigger>
-            <TabsTrigger value="history">Order History</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile">
@@ -33,11 +57,11 @@ export default function Dashboard() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue="John Doe" />
+                    <Input id="name" defaultValue={user.name} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" defaultValue="john@example.com" disabled />
+                    <Input id="email" defaultValue={user.email} disabled />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
@@ -78,6 +102,16 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="bg-muted/20 border-t p-6">
+                 <div className="w-full text-center">
+                    <p className="text-muted-foreground mb-4">Want to order more?</p>
+                    <Link href="/#categories">
+                        <Button variant="outline" className="gap-2">
+                            <ShoppingBag className="h-4 w-4" /> Browse Catalog
+                        </Button>
+                    </Link>
+                 </div>
+              </CardFooter>
             </Card>
           </TabsContent>
           

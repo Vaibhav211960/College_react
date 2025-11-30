@@ -6,9 +6,11 @@ import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useApp } from "@/lib/store";
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const { login } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -16,6 +18,7 @@ export default function Login() {
     setIsLoading(true);
     // Simulate login delay
     setTimeout(() => {
+      login({ name: "John Doe", email: "john@example.com" });
       setIsLoading(false);
       setLocation("/dashboard");
     }, 1000);
@@ -24,7 +27,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center py-12 px-4">
+      <div className="flex-1 flex items-center justify-center py-12 px-4 md:px-8 lg:px-12">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-serif text-center">Welcome back</CardTitle>
