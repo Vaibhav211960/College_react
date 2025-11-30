@@ -1,16 +1,43 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { createOrder } from "@/lib/api";
+import { useState } from "react";
 
 export function CartSheet() {
-  const { cart, removeFromCart, addToCart, cartTotal } = useApp();
+  const { cart, removeFromCart, cartTotal, clearCart } = useApp();
+  const { toast } = useToast();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      await createOrder(cart);
+      toast({
+        title: "Order placed!",
+        description: "Your order has been successfully placed.",
+      });
+      clearCart();
+      setIsOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Checkout failed",
+        description: error.message || "Failed to place order",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
@@ -36,38 +63,16 @@ export function CartSheet() {
             <div className="space-y-6">
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-4">
-                  <div className="h-20 w-20 rounded-md overflow-hidden border bg-secondary/20 shrink-0">
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
-                      className="h-full w-full object-cover"
-                    />
+                  <div className="h-20 w-20 rounded-md overflow-hidden border bg-secondary/20 shrink-0 flex items-center justify-center">
+                    <div className="text-2xl text-muted-foreground/30">🏠</div>
                   </div>
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <h4 className="font-medium font-serif line-clamp-1">{item.title}</h4>
-                      <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} x {item.quantity}</p>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-2 border rounded-md p-0.5">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={() => {
-                            // If quantity is 1, removing it would be removing from cart
-                            // Ideally we'd have a decreaseQuantity function, but for now reusing logic or adding separate handler
-                             if (item.quantity > 1) {
-                               // Hacky way to decrease: we need a proper decrease function in store
-                               // For now, let's just implement remove only or fix store later
-                               // Let's just show quantity
-                             }
-                          }}
-                          disabled
-                        >
-                          <span className="text-xs">{item.quantity}</span>
-                        </Button>
-                      </div>
+                      <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -91,8 +96,13 @@ export function CartSheet() {
               <span>Total</span>
               <span>${cartTotal.toFixed(2)}</span>
             </div>
-            <Button className="w-full" size="lg">
-              Checkout
+            <Button 
+              className="w-full" 
+              size="lg" 
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+            >
+              {isCheckingOut ? "Processing..." : "Checkout"}
             </Button>
           </div>
         )}

@@ -1,58 +1,76 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-
-type User = {
-  name: string;
-  email: string;
-};
+import { getCurrentUser, logout as apiLogout } from "./api";
+import type { User } from "@shared/schema";
 
 type CartItem = {
   id: number;
   title: string;
   price: number;
-  image: string;
+  imageUrl: string;
   quantity: number;
+  category?: string;
+  subcategory?: string;
 };
 
 type AppContextType = {
-  user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
+  user: Omit<User, "password"> | null;
+  isLoading: boolean;
+  login: (user: Omit<User, "password">) => void;
+  logout: () => Promise<void>;
   cart: CartItem[];
   addToCart: (item: any) => void;
   removeFromCart: (id: number) => void;
+  clearCart: () => void;
   cartTotal: number;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Initialize user from localStorage if available to persist across reloads
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<Omit<User, "password"> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem("user");
-      return saved ? JSON.parse(saved) : null;
+      const saved = localStorage.getItem("cart");
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      console.error("Failed to parse user from local storage", e);
-      return null;
+      return [];
     }
   });
 
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // Load user session on mount
+  useEffect(() => {
+    getCurrentUser()
+      .then((data) => {
+        if (data) {
+          setUser(data.user);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
 
+  // Persist cart to localStorage
   useEffect(() => {
     try {
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-      } else {
-        localStorage.removeItem("user");
-      }
+      localStorage.setItem("cart", JSON.stringify(cart));
     } catch (e) {
-      console.error("Failed to save user to local storage", e);
+      console.error("Failed to save cart", e);
     }
-  }, [user]);
+  }, [cart]);
 
-  const login = (userData: User) => setUser(userData);
-  const logout = () => setUser(null);
+  const login = (userData: Omit<User, "password">) => setUser(userData);
+  
+  const logout = async () => {
+    try {
+      await apiLogout();
+      setUser(null);
+      setCart([]);
+      localStorage.removeItem("cart");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const addToCart = (product: any) => {
     setCart((prev) => {
@@ -64,7 +82,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { 
+        id: product.id,
+        title: product.title,
+        price: parseFloat(product.price),
+        imageUrl: product.imageUrl || product.image,
+        quantity: 1,
+        category: product.category,
+        subcategory: product.subcategory,
+      }];
     });
   };
 
@@ -72,11 +98,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem("cart");
+  };
+
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <AppContext.Provider
-      value={{ user, login, logout, cart, addToCart, removeFromCart, cartTotal }}
+      value={{ user, isLoading, login, logout, cart, addToCart, removeFromCart, clearCart, cartTotal }}
     >
       {children}
     </AppContext.Provider>

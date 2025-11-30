@@ -7,21 +7,38 @@ import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useApp } from "@/lib/store";
+import { login as apiLogin } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { login } = useApp();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login delay
-    setTimeout(() => {
-      login({ name: "John Doe", email: "john@example.com" });
-      setIsLoading(false);
+    
+    try {
+      const data = await apiLogin(email, password);
+      login(data.user);
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully logged in.",
+      });
       setLocation("/dashboard");
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,13 +56,26 @@ export default function Login() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" required />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="m@example.com" 
+                  required 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
-              <Button className="w-full" disabled={isLoading}>
+              <Button className="w-full" disabled={isLoading} type="submit">
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>

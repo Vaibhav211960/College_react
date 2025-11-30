@@ -6,22 +6,89 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, Clock, User, ShoppingBag, Plus } from "lucide-react";
+import { Package, Clock, ShoppingBag, Plus } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { Link, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCurrentOrders, getOrderHistory, updateUser } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  const { user } = useApp();
+  const { user, login } = useApp();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    address: "",
+  });
 
   useEffect(() => {
     if (!user) {
       setLocation("/login");
+    } else {
+      setFormData({
+        name: user.name || "",
+        phone: user.phone || "",
+        address: user.address || "",
+      });
     }
   }, [user, setLocation]);
 
+  const { data: currentOrders = [], isLoading: isLoadingCurrent } = useQuery({
+    queryKey: ["orders", "current"],
+    queryFn: getCurrentOrders,
+    enabled: !!user,
+  });
+
+  const { data: orderHistory = [], isLoading: isLoadingHistory } = useQuery({
+    queryKey: ["orders", "history"],
+    queryFn: getOrderHistory,
+    enabled: !!user,
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: updateUser,
+    onSuccess: (data) => {
+      login(data);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(formData);
+  };
+
   if (!user) return null;
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { color: string; label: string }> = {
+      processing: { color: "bg-amber-500 hover:bg-amber-600", label: "Processing" },
+      shipped: { color: "bg-blue-500 hover:bg-blue-600", label: "Shipped" },
+      delivered: { color: "bg-green-500 hover:bg-green-600", label: "Delivered" },
+      cancelled: { color: "bg-red-500 hover:bg-red-600", label: "Cancelled" },
+    };
+    const config = statusMap[status] || statusMap.processing;
+    return <Badge className={config.color}>{config.label}</Badge>;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -54,25 +121,29 @@ export default function Dashboard() {
                 <CardDescription>Manage your personal details and shipping address.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue={user.name} />
+                <form onSubmit={handleSave} className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input id="name" value={formData.name} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" value={user.email} disabled />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input id="phone" value={formData.phone} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input id="address" value={formData.address} onChange={handleChange} />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" defaultValue={user.email} disabled />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" defaultValue="+1 (555) 123-4567" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" defaultValue="123 Design District, Floor City" />
-                  </div>
-                </div>
-                <Button className="mt-4">Save Changes</Button>
+                  <Button type="submit" className="mt-4" disabled={updateProfileMutation.isPending}>
+                    {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>
@@ -84,23 +155,33 @@ export default function Dashboard() {
                 <CardDescription>Track the status of your active orders.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg bg-secondary/10">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                        <Package className="h-5 w-5" />
+                {isLoadingCurrent ? (
+                  <p className="text-muted-foreground text-center py-8">Loading orders...</p>
+                ) : currentOrders.length > 0 ? (
+                  <div className="space-y-4">
+                    {currentOrders.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg bg-secondary/10">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                            <Package className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium">Order #{order.id}</h4>
+                            <p className="text-sm text-muted-foreground">{order.items.length} items</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {getStatusBadge(order.status)}
+                          <p className="text-sm font-medium mt-1">${parseFloat(order.totalAmount).toFixed(2)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium">Order #10234</h4>
-                        <p className="text-sm text-muted-foreground">2 items • Carrara Marble Tile</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className="mb-1 bg-amber-500 hover:bg-amber-600">Processing</Badge>
-                      <p className="text-sm font-medium">$450.00</p>
-                    </div>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground mb-4">No active orders</p>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="bg-muted/20 border-t p-6">
                  <div className="w-full text-center">
@@ -122,23 +203,37 @@ export default function Dashboard() {
                 <CardDescription>View your past purchases.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground">
-                        <Clock className="h-5 w-5" />
+                {isLoadingHistory ? (
+                  <p className="text-muted-foreground text-center py-8">Loading history...</p>
+                ) : orderHistory.length > 0 ? (
+                  <div className="space-y-4">
+                    {orderHistory.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground">
+                            <Clock className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-muted-foreground">Order #{order.id}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {getStatusBadge(order.status)}
+                          <p className="text-sm font-medium text-muted-foreground mt-1">
+                            ${parseFloat(order.totalAmount).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium text-muted-foreground">Order #9921</h4>
-                        <p className="text-sm text-muted-foreground">Delivered on Oct 12, 2023</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className="mb-1">Delivered</Badge>
-                      <p className="text-sm font-medium text-muted-foreground">$1,200.00</p>
-                    </div>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No order history yet</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
