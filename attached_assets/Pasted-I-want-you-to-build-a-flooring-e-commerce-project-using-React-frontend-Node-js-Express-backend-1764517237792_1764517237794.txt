@@ -1,0 +1,281 @@
+I want you to build a flooring e-commerce project using React (frontend), Node.js + Express (backend), and Mongoose/MongoDB (database).
+
+General requirements:
+
+Use JSX for all React components (no TypeScript).
+
+Keep the design clean, modern and classic, not ultra-fancy – neutral colors with wood/stone/white/grey tones.
+
+Fully responsive layout for desktop & mobile.
+
+FRONTEND PAGES & ROUTES
+1. / – Landing Page
+
+Include:
+
+Navbar with logo “Inscape Floors” and links: Home, Categories, About, Contact, Login/Register.
+
+Hero section with heading, subtitle, background image/gradient and CTA button: “Explore Flooring Options”
+
+Main Categories section (card layout):
+
+Tiles Flooring
+
+Ceramic Tiles
+
+Porcelain Tiles
+
+Marble Tiles
+
+Granite Tiles
+
+Outdoor Tiles
+
+Wooden Flooring
+
+Solid Wood Flooring
+
+Engineered Wood
+
+Laminate Flooring
+
+Parquet Flooring
+
+Vinyl Flooring
+
+Luxury Vinyl Tiles (LVT)
+
+SPC Vinyl
+
+PVC Vinyl Flooring
+
+Sheet Vinyl Flooring
+
+Carpet Flooring
+
+Carpet Tiles
+
+Wall-to-Wall Carpets
+
+Artificial Grass Carpet
+
+Stone Flooring
+
+Slate Stone
+
+Sandstone
+
+Kota Stone
+
+Each category card:
+
+Image
+
+Title
+
+Short description
+
+On click → show subcategory grid or navigate to /category/:categoryName
+
+Why Choose Us section with feature boxes:
+
+Premium Materials
+
+Affordable Pricing
+
+Installation Support
+
+Nationwide Delivery
+
+Testimonials / Reviews section (cards).
+
+Footer:
+
+Address
+
+Phone number
+
+Email
+
+Social links
+
+2. /login – Login Page
+
+Email + password form
+
+Validation (required fields, email format)
+
+JWT login
+
+Redirect to dashboard on success
+
+3. /register – Registration Page
+
+Fields:
+
+Name
+
+Email
+
+Password & Confirm Password
+
+Phone
+
+Address
+
+Save user to MongoDB
+
+Redirect to login or auto-login
+
+4. /dashboard – Customer Dashboard (protected route)
+
+Sidebar or tab layout with:
+
+Profile
+
+Shows:
+
+Name
+
+Email
+
+Phone
+
+Address
+
+Option to edit profile
+
+Current Orders
+
+Active orders list with:
+
+Product names
+
+Category + Subcategory
+
+Quantity
+
+Total price
+
+Order status (Processing / Shipped / Delivered)
+
+Order History
+
+Completed orders with:
+
+Order ID
+
+Date
+
+Amount
+
+Items summary
+
+BACKEND REQUIREMENTS (Node + Express + Mongoose)
+Database Models
+User
+
+name
+
+email
+
+password (hashed)
+
+phone
+
+address
+
+createdAt
+
+Product
+
+title
+
+category (Tiles / Wood / Vinyl / Carpet / Stone)
+
+subcategory (Ceramic, LVT, Parquet, etc.)
+
+description
+
+price
+
+imageUrl
+
+inStock
+
+Order
+
+userId
+
+items:
+
+productId
+
+title
+
+category
+
+subcategory
+
+quantity
+
+price
+
+totalAmount
+
+status
+
+createdAt
+
+API ROUTES
+Authentication
+
+POST /api/auth/register
+
+POST /api/auth/login
+
+User
+
+GET /api/user/me
+
+PUT /api/user/me
+
+Products
+
+GET /api/products
+
+GET /api/products/category/:category
+
+GET /api/products/:id
+
+Orders
+
+GET /api/orders/current
+
+GET /api/orders/history
+
+NOTES
+
+Seed MongoDB with sample categories, subcategories, products & test orders for demo.
+
+Payment system not needed for now.
+
+Focus on:
+
+Clean structure
+
+Organized components
+
+Useful dummy data
+
+Professional UI feel
+
+Please provide:
+
+Complete React JSX components (pages + common components)
+
+Express server setup + route handlers
+
+Mongoose models
+
+Frontend routing using React Router
