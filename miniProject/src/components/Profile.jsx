@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const user = {
+  name: "John Doe",
+  username: "john",
+  joined: "January 2026",
+};
+
 const quizHistory = [
   { topic: "JavaScript", score: 4, total: 5, percent: 80,  date: "Mar 06, 2026" },
   { topic: "React.js",   score: 5, total: 5, percent: 100, date: "Mar 05, 2026" },
