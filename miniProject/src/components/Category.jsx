@@ -17,30 +17,24 @@ const tagStyle = {
 };
 
 const Category = () => {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  const handleStart = (path) => {
+    if (!isLoggedIn) navigate("/login");
+    else navigate(path);
+  };
 
   return (
     <div style={{
-      position: "fixed",
-      left: 0,
-      top: "60px",
-      width: "100%",
-      height: "100%",
-      backgroundColor: "#000",
-      color: "#fff",
-      fontFamily: "sans-serif",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      padding: "80px 24px 60px",
-      boxSizing: "border-box",
+      position: "fixed", left: 0, top: "60px", width: "100%", height: "100%",
+      backgroundColor: "#000", color: "#fff", fontFamily: "sans-serif",
+      overflowY: "auto", boxSizing: "border-box",
     }}>
-
-      {/* Centered container */}
-      <div style={{ width: "100%", maxWidth: "860px" }}>
+      <div style={{ width: "100%", padding: "48px 48px 60px", boxSizing: "border-box" }}>
 
         {/* ── Page Header ── */}
-        <div>
+        <div style={{ marginBottom: "32px" }}>
           <button
             onClick={() => navigate("/")}
             style={{ color: "#555", fontSize: "13px", background: "none", border: "none", cursor: "pointer", marginBottom: "20px", display: "block", padding: 0 }}
@@ -49,74 +43,39 @@ const Category = () => {
           >
             ← Back to Home
           </button>
-
-          <p style={{ color: "#444", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>
-            Step 01
-          </p>
-          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fff", marginBottom: "6px" }}>
-            All Topics
-          </h1>
-          <p style={{ color: "#555", fontSize: "14px" }}>
-            Choose a topic to start your quiz.
-          </p>
+          <p style={{ color: "#444", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>Step 01</p>
+          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#fff", marginBottom: "6px" }}>All Topics</h1>
+          <p style={{ color: "#555", fontSize: "14px" }}>Choose a topic to start your quiz.</p>
         </div>
 
         {/* ── Divider ── */}
         <div style={{ width: "100%", height: "1px", backgroundColor: "#1a1a1a", marginBottom: "32px" }} />
 
         {/* ── Topics Grid ── */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "14px",
-        }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
           {topics.map((t, i) => (
             <div
               key={i}
-              onClick={() => navigate(t.path)}
+              onClick={() => handleStart(t.path)}
               style={{
-                backgroundColor: "#0d0d0d",
-                border: "1px solid #1a1a1a",
-                borderRadius: "10px",
-                padding: "22px",
-                cursor: "pointer",
-                transition: "border-color 0.15s ease",
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
+                backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "10px",
+                padding: "28px 28px 22px", cursor: "pointer", transition: "border-color 0.15s ease",
+                display: "flex", flexDirection: "column", gap: "10px",
               }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "#333"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#1a1a1a"}
             >
-              {/* Top row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                 <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#fff" }}>{t.name}</h3>
-                <span style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "3px 10px",
-                  borderRadius: "20px",
-                  whiteSpace: "nowrap",
-                  ...tagStyle[t.tag],
-                }}>
+                <span style={{ fontSize: "11px", fontWeight: "600", padding: "3px 10px", borderRadius: "20px", whiteSpace: "nowrap", ...tagStyle[t.tag] }}>
                   {t.tag}
                 </span>
               </div>
-
-              {/* Description */}
-              <p style={{ color: "#555", fontSize: "13px", lineHeight: 1.6, flexGrow: 1, marginBottom: "18px" }}>
-                {t.desc}
-              </p>
-
-              {/* Footer row */}
-              <div style={{
-                borderTop: "1px solid #1a1a1a",
-                paddingTop: "14px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}>
-                <span style={{ color: "#fff", fontSize: "13px", fontWeight: "600" }}>Start Quiz</span>
+              <p style={{ color: "#555", fontSize: "13px", lineHeight: 1.6, flexGrow: 1, marginBottom: "18px" }}>{t.desc}</p>
+              <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: isLoggedIn ? "#fff" : "#555", fontSize: "13px", fontWeight: "600" }}>
+                  {isLoggedIn ? "Start Quiz" : "🔒 Login to Start"}
+                </span>
                 <span style={{ color: "#444", fontSize: "15px" }}>→</span>
               </div>
             </div>
@@ -124,14 +83,7 @@ const Category = () => {
         </div>
 
         {/* ── Footer ── */}
-        <div style={{
-          marginTop: "48px",
-          paddingTop: "20px",
-          borderTop: "1px solid #1a1a1a",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}>
+        <div style={{ marginTop: "48px", paddingTop: "20px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ color: "#333", fontSize: "13px" }}>© 2026 QuizLet</span>
           <span style={{ color: "#333", fontSize: "13px" }}>6 topics • 30 questions</span>
         </div>

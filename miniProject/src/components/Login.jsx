@@ -5,20 +5,23 @@ const Login = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
 
-  const user = { name: "john", password: "qwertyuiop" };
+  const user = { name: "vivek123", password: "qwertyuiop" };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const name = e.target.name.value;
-    const pass = e.target.pass.value;
-    if (name === user.name && pass === user.password) {
-      setError("");
-      alert("Login successful!");
-      navigate("/");
-    } else {
-      setError("Incorrect username or password. Please try again.");
-    }
-  };
+const handleSubmit = (e) => {
+  e.preventDefault();
+  const name = e.target.name.value;
+  const pass = e.target.pass.value;
+  if (name === user.name && pass === user.password) {
+  setError("");
+  localStorage.setItem("isLoggedIn", "true");
+  localStorage.setItem("username", name);
+  window.dispatchEvent(new Event("authChange")); // ← add this
+  alert("Login successful!");
+  navigate("/");
+} else {
+    setError("Incorrect username or password. Please try again.");
+  }
+};
 
   return (
     <div className="fixed top-[60px] left-0 w-full h-full bg-black flex items-center justify-center px-6">

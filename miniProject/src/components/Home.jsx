@@ -2,9 +2,9 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const topics = [
-  { title: "React.js",   path: "/quiz/react",   desc: "Components, hooks, and state management.", tag: "Advanced" },
-  { title: "JavaScript", path: "/quiz/js",       desc: "Core language, ES6+, and async patterns.", tag: "Core"     },
-  { title: "HTML & CSS", path: "/quiz/html",     desc: "Semantic HTML and modern CSS styling.",    tag: "Beginner" },
+  { title: "React.js",   path: "/quiz/react", desc: "Components, hooks, and state management.", tag: "Advanced" },
+  { title: "JavaScript", path: "/quiz/js",    desc: "Core language, ES6+, and async patterns.", tag: "Core"     },
+  { title: "HTML & CSS", path: "/quiz/html",  desc: "Semantic HTML and modern CSS styling.",    tag: "Beginner" },
 ];
 
 const tagStyle = {
@@ -21,21 +21,27 @@ const stats = [
 ];
 
 const steps = [
-  { step: "01", title: "Pick a Topic",     desc: "Choose from 6 topics across frontend and backend." },
-  { step: "02", title: "Answer Questions", desc: "Go through 5 questions and pick the best answer."  },
+  { step: "01", title: "Pick a Topic",     desc: "Choose from 6 topics across frontend and backend."      },
+  { step: "02", title: "Answer Questions", desc: "Go through 5 questions and pick the best answer."       },
   { step: "03", title: "See Your Score",   desc: "Get your result instantly with a percentage breakdown." },
 ];
 
 const Home = () => {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  const handleStart = (path) => {
+    if (!isLoggedIn) navigate("/login");
+    else navigate(path);
+  };
 
   return (
-    <div style={{position: "absolute", left: 0, top: "60px", width: "100%", backgroundColor: "#000", color: "#fff", fontFamily: "sans-serif", minHeight: "100vh" }}>
-      <section style={{display: "flex", alignItems: "center", justifyContent: "center", width: "100%", boxSizing: "border-box", padding: "80px 40px 64px", borderBottom: "1px solid #1a1a1a" }}>
+    <div style={{ position: "absolute", left: 0, top: "60px", width: "100%", backgroundColor: "#000", color: "#fff", fontFamily: "sans-serif", minHeight: "100vh" }}>
+
+      {/* ── Hero ── */}
+      <section style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", boxSizing: "border-box", padding: "80px 40px 64px", borderBottom: "1px solid #1a1a1a" }}>
         <div style={{ maxWidth: "640px" }}>
-          <p style={{ color: "#555", fontSize: "12px", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "16px" }}>
-            Technical Quiz Platform
-          </p>
+          <p style={{ color: "#555", fontSize: "12px", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "16px" }}>Technical Quiz Platform</p>
           <h1 style={{ fontSize: "clamp(32px, 4.5vw, 52px)", fontWeight: "800", lineHeight: 1.2, marginBottom: "18px", color: "#fff" }}>
             Test what you know.<br />
             <span style={{ color: "#333" }}>Learn what you don't.</span>
@@ -45,7 +51,7 @@ const Home = () => {
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
             <button
-              onClick={() => navigate("/categories")}
+              onClick={() => isLoggedIn ? navigate("/categories") : navigate("/login")}
               style={{ backgroundColor: "#fff", color: "#000", fontWeight: "700", fontSize: "14px", padding: "12px 26px", borderRadius: "8px", border: "none", cursor: "pointer" }}
             >
               Start a Quiz
@@ -59,17 +65,18 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* ── Stats ── */}
       <section style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#080808", borderBottom: "1px solid #1a1a1a", display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
         {stats.map((s, i) => (
-          <div key={i} style={{
-            padding: "28px 40px",
-            borderRight: i < stats.length - 1 ? "1px solid #1a1a1a" : "none",
-          }}>
+          <div key={i} style={{ padding: "28px 40px", borderRight: i < stats.length - 1 ? "1px solid #1a1a1a" : "none" }}>
             <div style={{ fontSize: "32px", fontWeight: "800", color: "#fff", lineHeight: 1 }}>{s.value}</div>
             <div style={{ fontSize: "13px", color: "#555", marginTop: "5px" }}>{s.label}</div>
           </div>
         ))}
       </section>
+
+      {/* ── Popular Topics ── */}
       <section style={{ width: "100%", boxSizing: "border-box", padding: "56px 40px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px" }}>
           <div>
@@ -84,7 +91,7 @@ const Home = () => {
           {topics.map((t) => (
             <div
               key={t.title}
-              onClick={() => navigate(t.path)}
+              onClick={() => handleStart(t.path)}
               style={{ backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "22px", cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "#333"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#1a1a1a"}
@@ -97,17 +104,20 @@ const Home = () => {
               </div>
               <p style={{ color: "#555", fontSize: "13px", lineHeight: 1.6, marginBottom: "18px" }}>{t.desc}</p>
               <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: "#fff", fontSize: "13px", fontWeight: "600" }}>Start Quiz</span>
+                <span style={{ color: isLoggedIn ? "#fff" : "#555", fontSize: "13px", fontWeight: "600" }}>
+                  {isLoggedIn ? "Start Quiz" : "🔒 Login to Start"}
+                </span>
                 <span style={{ color: "#444" }}>→</span>
               </div>
             </div>
           ))}
         </div>
       </section>
+
+      {/* ── How it works ── */}
       <section style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#080808", borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a", padding: "56px 40px" }}>
         <p style={{ color: "#444", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "5px" }}>Simple Process</p>
         <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#fff", marginBottom: "32px" }}>How it works</h2>
-
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "40px" }}>
           {steps.map((item) => (
             <div key={item.step}>
@@ -119,6 +129,8 @@ const Home = () => {
           ))}
         </div>
       </section>
+
+      {/* ── Footer ── */}
       <footer style={{ width: "100%", boxSizing: "border-box", padding: "20px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ color: "#333", fontSize: "13px" }}>© 2026 QuizLet</span>
         <div style={{ display: "flex", gap: "20px" }}>
